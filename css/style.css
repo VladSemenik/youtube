@@ -106,7 +106,7 @@
   display: flex;
   justify-content: space-around;
   width: 100%;
-  transition: left 1s ease 100ms;
+  transition: left 0.5s ease 0s;
 }
 @keyframes preloader {
   100% {
