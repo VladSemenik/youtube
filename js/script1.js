@@ -104,10 +104,14 @@ window.onload = function () {
     const pages = document.querySelectorAll('.pages');
     Array.from(pages).forEach((element, index) => {
       element.style.left = `${screen.availWidth * index}px`;
-      element.addEventListener('touchstart', (eStart) => {
-        element.addEventListener('touchend', (eEnd) => {
-          makeSwipe(eStart.changedTouches['0'].clientX, eEnd.changedTouches['0'].clientX, element, index, pages);
-        });
+      let start = 0;
+      let end = 0;
+      element.addEventListener('touchstart', (event) => {
+        start = event.changedTouches['0'].clientX;
+      });
+      element.addEventListener('touchend', (event) => {
+        end = event.changedTouches['0'].clientX;
+        makeSwipe(start, end, element, index, pages);
       });
     });
   }
@@ -115,27 +119,24 @@ window.onload = function () {
   function swipeLeft() {
     Array.from(document.querySelectorAll('.pages')).forEach((element) => {
       element.style.left = `${parseInt(element.style.left, 10) - screen.availWidth}px`;
-      console.log('black');
-      console.log(screen.availWidth);
+      console.log('left', element.style.left);
     });
   }
 
   function swipeRight() {
     Array.from(document.querySelectorAll('.pages')).forEach((element) => {
       element.style.left = `${parseInt(element.style.left, 10) + screen.availWidth}px`;
-      console.log(element.style.left);
+      console.log('right', element.style.left);
     });
   }
 
   function makeSwipe(start, end, elem, index, items) {
-    console.log(start);
-    console.log(end);
-    if (end - start < -screen.availWidth * 0.4) {
+    if (end - start < -screen.availWidth * 0) {
       if (index !== items.length - 1) {
         swipeLeft();
       }
     }
-    if (end - start > screen.availWidth * 0.4) {
+    if (end - start > screen.availWidth * 0) {
       if (index !== 0) {
         swipeRight();
       }
