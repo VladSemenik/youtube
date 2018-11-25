@@ -1,4 +1,3 @@
-/* eslint-disable guard-for-in */
 /* eslint-disable func-names */
 window.onload = function () {
   const URLS = 'https://www.googleapis.com/youtube/v3/search';
@@ -49,9 +48,17 @@ window.onload = function () {
     channelInfo.querySelector('#description').innerHTML = element.snippet.title;
   }
 
+  function createElem(elem, id, counter) {
+    elem.className = `${id}s`;
+    elem.id = `${id}${counter}`;
+    return elem;
+  }
+
   function print(response) {
     const items = document.querySelector('#items');
+    const nav = document.querySelector('#navigate');
     let page = document.createElement('section');
+    let point = document.createElement('div');
     let count = 0;
     let pageCount = 1;
     items.innerHTML = '';
@@ -59,17 +66,18 @@ window.onload = function () {
       const item = document.createElement('article');
       item.className = 'item';
       item.innerHTML = ITEM;
-      page.className = 'pages';
-      page.id = `page${pageCount}`;
+      page = createElem(page, 'page', pageCount);
+      point = createElem(point, 'point', pageCount);
+      nav.appendChild(createElem(point, 'point', pageCount));
       if (screen.availWidth / (260 * (count + 1)) >= 1) {
         page.appendChild(item);
       } else {
         page = document.createElement('section');
-        page.className = 'pages';
-        page.id = `page${pageCount}`;
-        page.appendChild(item);
+        point = document.createElement('div');
         count = 0;
         pageCount += 1;
+        createElem(page, 'page', pageCount).appendChild(item);
+        nav.appendChild(createElem(point, 'point', pageCount));
       }
       count += 1;
       items.appendChild(page);
@@ -103,9 +111,9 @@ window.onload = function () {
   function setPagesPosition() {
     const pages = document.querySelectorAll('.pages');
     Array.from(pages).forEach((element, index) => {
-      element.style.left = `${screen.availWidth * index}px`;
       let start = 0;
       let end = 0;
+      element.style.left = `${screen.availWidth * index}px`;
       element.addEventListener('touchstart', (event) => {
         start = event.changedTouches['0'].clientX;
       });
@@ -131,12 +139,12 @@ window.onload = function () {
   }
 
   function makeSwipe(start, end, elem, index, items) {
-    if (end - start < -screen.availWidth * 0) {
+    if (end - start < -screen.availWidth * 0.3) {
       if (index !== items.length - 1) {
         swipeLeft();
       }
     }
-    if (end - start > screen.availWidth * 0) {
+    if (end - start > screen.availWidth * 0.3) {
       if (index !== 0) {
         swipeRight();
       }

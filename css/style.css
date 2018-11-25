@@ -2,7 +2,7 @@
 @import url('https://fonts.googleapis.com/css?family=Niramit|Noto+Sans+TC');
  body {
    display: grid;
-   grid-template-rows: 1fr 430px;
+   grid-template-rows: 1fr 430px 100px;
    margin: 0;
    padding: 0;
    background-color: #343D46;
@@ -106,7 +106,20 @@
   display: flex;
   justify-content: space-around;
   width: 100%;
-  transition: left 0.3s ease 0s;
+  transition: left 200ms ease 0s;
+}
+.navigate {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+}
+.points {
+  box-sizing: border-box;
+  width: 30px;
+  height: 30px;
+  border-radius: 50%;
+  border: 5px solid black;
+  cursor: pointer;
 }
 @keyframes preloader {
   100% {
