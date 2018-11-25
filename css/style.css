@@ -117,9 +117,17 @@
   box-sizing: border-box;
   width: 30px;
   height: 30px;
+  margin: 0 10px 0;
   border-radius: 50%;
   border: 5px solid black;
   cursor: pointer;
+  text-align: center;
+  line-height: 20px;
+  font-size: 0.8rem;
+  font-family: 'Niramit', sans-serif;
+}
+.-selected {
+  background-color: #FFFFFF;
 }
 @keyframes preloader {
   100% {

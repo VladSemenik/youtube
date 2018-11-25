@@ -1,3 +1,7 @@
+/* eslint-disable no-use-before-define */
+/* eslint-disable no-restricted-globals */
+/* eslint-disable no-param-reassign */
+/* eslint-disable no-undef */
 /* eslint-disable func-names */
 window.onload = function () {
   const URLS = 'https://www.googleapis.com/youtube/v3/search';
@@ -6,10 +10,11 @@ window.onload = function () {
   const INFO = '<div id="channelTitle" class="channel-title"></div><div id="publishedAt" class="published-at"></div><div id="viewCount" class="watchs"></div><div id="description" class="description"></div>';
   const PRELOADER = '<div id="preloader" class="preloader"></div>';
   const ITEMS = document.querySelector('#items');
+  let countReq = 0;
   const send = {
     part: 'snippet',
     q: '',
-    maxResults: 10,
+    maxResults: 15,
     key: 'AIzaSyCwfzqmtPjPR0MMPSTn78sWgnfM6_XPCfM',
     my: 1,
   };
@@ -32,8 +37,24 @@ window.onload = function () {
     });
     return link;
   }
+  function getAsyncRequest(obj, requestURL, callPrint, ...forwarding) {
+    const req = new XMLHttpRequest();
+    requestURL = makeUrl(obj, requestURL);
+
+    req.open('GET', requestURL, true);
+
+    req.addEventListener('load', () => {
+      callPrint(JSON.parse(req.responseText), forwarding);
+    });
+
+    req.addEventListener('error', () => {
+      console.log('Error:', req.status);
+    });
+
+    req.send(null);
+  }
   function printWatchs(response, forwarding) {
-    forwarding.querySelector('#viewCount').innerHTML = response.items[0].statistics.viewCount;
+    forwarding[0].querySelector('#viewCount').innerHTML = response.items[0].statistics.viewCount;
   }
 
   function printInfo(item, element) {
@@ -48,36 +69,62 @@ window.onload = function () {
     channelInfo.querySelector('#description').innerHTML = element.snippet.title;
   }
 
-  function createElem(elem, id, counter) {
+  function createElem(elem, id) {
     elem.className = `${id}s`;
-    elem.id = `${id}${counter}`;
     return elem;
   }
 
-  function print(response) {
+  function movePages(point, i, points) {
+    const pages = document.querySelectorAll('.pages');
+    Array.from(pages).forEach((element, index) => {
+      points[index].innerHTML = '';
+      if (i !== index) {
+        element.style.display = 'none';
+      } else {
+        element.style.display = 'flex';
+        element.style.left = '0px';
+        point.innerHTML = i;
+      }
+    });
+  }
+
+  function swipeLeft() {
+    Array.from(document.querySelectorAll('.pages')).forEach((element) => {
+      element.style.left = `${parseInt(element.style.left, 10) - screen.availWidth}px`;
+    });
+  }
+
+  function swipeRight() {
+    Array.from(document.querySelectorAll('.pages')).forEach((element) => {
+      element.style.left = `${parseInt(element.style.left, 10) + screen.availWidth}px`;
+    });
+  }
+
+  function print(response, forwarding) {
     const items = document.querySelector('#items');
     const nav = document.querySelector('#navigate');
     let page = document.createElement('section');
     let point = document.createElement('div');
     let count = 0;
-    let pageCount = 1;
-    items.innerHTML = '';
-    Array.from(response.items).forEach((element, index) => {
+    if (!forwarding[0]) {
+      items.innerHTML = '';
+      nav.innerHTML = '';
+    }
+    Array.from(response.items).forEach((element) => {
       const item = document.createElement('article');
       item.className = 'item';
       item.innerHTML = ITEM;
-      page = createElem(page, 'page', pageCount);
-      point = createElem(point, 'point', pageCount);
-      nav.appendChild(createElem(point, 'point', pageCount));
+      page = createElem(page, 'page');
+      point = createElem(point, 'point');
+      nav.appendChild(point);
       if (screen.availWidth / (260 * (count + 1)) >= 1) {
         page.appendChild(item);
       } else {
         page = document.createElement('section');
         point = document.createElement('div');
         count = 0;
-        pageCount += 1;
-        createElem(page, 'page', pageCount).appendChild(item);
-        nav.appendChild(createElem(point, 'point', pageCount));
+        createElem(page, 'page').appendChild(item);
+        nav.appendChild(createElem(point, 'point'));
       }
       count += 1;
       items.appendChild(page);
@@ -86,34 +133,52 @@ window.onload = function () {
       item.querySelector('#link-video').innerHTML = element.snippet.title;
       printInfo(item, element);
     });
-    setPagesPosition();
+
+    if (screen.availWidth > '1000') {
+      Array.from(document.querySelectorAll('.points')).forEach((elem, i, array) => {
+        elem.addEventListener('click', () => {
+          movePages(elem, i, array);
+          if (i === array.length - 1) {
+            if (send.maxResults !== 45) {
+              send.maxResults += 15;
+              getAsyncRequest(send, URLS, print, false, countReq);
+              countReq += 1;
+            }
+          }
+        });
+      });
+    } else {
+      nav.style.display = 'none';
+      setPagesPosition();
+    }
   }
-
-  function getAsyncRequest(obj, requestURL, callPrint, forwarding) {
-    const req = new XMLHttpRequest();
-    requestURL = makeUrl(obj, requestURL);
-
-    req.open('GET', requestURL, true);
-
-    req.addEventListener('load', () => {
-      console.log('Done:', req.status);
-      console.log(JSON.parse(req.responseText));
-      callPrint(JSON.parse(req.responseText), forwarding);
-    });
-
-    req.addEventListener('error', () => {
-      console.log('Error:', req.status);
-    });
-
-    req.send(null);
+  function makeSwipe(start, end, elem, index, items) {
+    items = document.querySelectorAll('.pages');
+    if (end - start < -screen.availWidth * 0.3) {
+      if (index === items.length - 1) {
+        if (send.maxResults !== 45) {
+          send.maxResults += 15;
+          getAsyncRequest(send, URLS, print, false, countReq);
+          countReq += 1;
+        }
+      } else {
+        swipeLeft();
+      }
+    }
+    if (end - start > screen.availWidth * 0.3) {
+      if (index !== 0) {
+        swipeRight();
+      }
+    }
   }
-
   function setPagesPosition() {
     const pages = document.querySelectorAll('.pages');
     Array.from(pages).forEach((element, index) => {
       let start = 0;
       let end = 0;
-      element.style.left = `${screen.availWidth * index}px`;
+      if (index >= send.maxResults - 15 * countReq) {
+        element.style.left = `${screen.availWidth * index}px`;
+      }
       element.addEventListener('touchstart', (event) => {
         start = event.changedTouches['0'].clientX;
       });
@@ -124,37 +189,11 @@ window.onload = function () {
     });
   }
 
-  function swipeLeft() {
-    Array.from(document.querySelectorAll('.pages')).forEach((element) => {
-      element.style.left = `${parseInt(element.style.left, 10) - screen.availWidth}px`;
-      console.log('left', element.style.left);
-    });
-  }
-
-  function swipeRight() {
-    Array.from(document.querySelectorAll('.pages')).forEach((element) => {
-      element.style.left = `${parseInt(element.style.left, 10) + screen.availWidth}px`;
-      console.log('right', element.style.left);
-    });
-  }
-
-  function makeSwipe(start, end, elem, index, items) {
-    if (end - start < -screen.availWidth * 0.3) {
-      if (index !== items.length - 1) {
-        swipeLeft();
-      }
-    }
-    if (end - start > screen.availWidth * 0.3) {
-      if (index !== 0) {
-        swipeRight();
-      }
-    }
-  }
-
-
   button.addEventListener('click', () => {
     send.q = searchLine.value;
     ITEMS.innerHTML = PRELOADER;
-    getAsyncRequest(send, URLS, print);
+    send.maxResults = 15;
+    countReq += 1;
+    getAsyncRequest(send, URLS, print, false, countReq);
   });
 };
